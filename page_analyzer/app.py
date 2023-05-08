@@ -2,8 +2,7 @@ import os
 from page_analyzer.validator import validator
 from dotenv import load_dotenv
 from .url_parser import parser
-from page_analyzer import db_works
-from .db_works import get_urls_list, get_url_check
+from page_analyzer import db
 from flask import (
     Flask,
     flash,
@@ -46,7 +45,7 @@ def add_url():
             422,
         )
     parsed_url = parser(url_from_form)
-    url_id = db_works.b(parsed_url)
+    url_id = db.get_url_id(parsed_url)
     return redirect(
         url_for(
             "show_single_url",
@@ -57,7 +56,7 @@ def add_url():
 @app.route("/urls/<int:url_id>")
 def show_single_url(url_id):
     messages = get_flashed_messages(with_categories=True)
-    checks, result = db_works.a(url_id)
+    checks, result = db.get_url_cheks(url_id)
 
     return render_template(
         "/url.html",
@@ -69,7 +68,7 @@ def show_single_url(url_id):
 @app.get("/urls")
 def show_urls():
     messages = get_flashed_messages(with_categories=True)
-    urls = get_urls_list()
+    urls = db.get_urls_list()
     return render_template(
         "/urls.html",
         urls=urls,
@@ -78,5 +77,5 @@ def show_urls():
 
 @app.post("/urls/<int:url_id>/checks")
 def check_url(url_id):
-    get_url_check(url_id)
+    db.get_url_check(url_id)
     return redirect(url_for("show_single_url", url_id=url_id))
