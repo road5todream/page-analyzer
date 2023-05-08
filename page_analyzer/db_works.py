@@ -2,18 +2,11 @@ import os
 import psycopg2
 import requests
 import bs4
-
 from dotenv import load_dotenv
+from flask import redirect, url_for, flash, session
 
-from flask import (
-    redirect,
-    url_for,
-    flash,
-    session,
-)
 
 load_dotenv()
-
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -24,6 +17,34 @@ def get_conn():
 
 
 conn = get_conn()
+
+
+def a(url_id):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as curs:
+            curs.execute(
+                """SELECT *
+                FROM urls
+                WHERE urls.id = %s
+                LIMIT 1""",
+                (url_id,),
+            )
+            result = curs.fetchall()
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as curs:
+            curs.execute(
+                """
+                        SELECT
+                        id, status_code, h1, title,
+                        description, created_at
+                        FROM url_checks
+                        WHERE url_checks.url_id = %s
+                        ORDER BY id DESC
+                        """,
+                (url_id,),
+            )
+            checks = curs.fetchall()
+    return checks, result
 
 
 def get_urls_list():

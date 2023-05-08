@@ -19,6 +19,7 @@ from flask import (
     session,
     url_for,
 )
+from page_analyzer import db_works
 
 app = Flask(__name__)
 
@@ -90,34 +91,13 @@ def add_url():
 @app.route("/urls/<int:url_id>")
 def show_single_url(url_id):
     messages = get_flashed_messages(with_categories=True)
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                """SELECT *
-                FROM urls
-                WHERE urls.id = %s
-                LIMIT 1""",
-                (url_id,),
-            )
-            result = curs.fetchall()
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                """
-                        SELECT
-                        id, status_code, h1, title,
-                        description, created_at
-                        FROM url_checks
-                        WHERE url_checks.url_id = %s
-                        ORDER BY id DESC
-                        """,
-                (url_id,),
-            )
-            checks = curs.fetchall()
+    checks, result = db_works.a(url_id)
 
     return render_template(
-        "/url.html", url=result[0], checks=checks, messages=messages
-    )
+        "/url.html",
+        url=result[0],
+        checks=checks,
+        messages=messages)
 
 
 @app.get("/urls")
@@ -127,8 +107,7 @@ def show_urls():
     return render_template(
         "/urls.html",
         urls=urls,
-        messages=messages,
-    )
+        messages=messages)
 
 
 @app.post("/urls/<int:url_id>/checks")
