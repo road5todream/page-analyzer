@@ -10,3 +10,4 @@
 ``$ git clone https://github.com/road5todream/page-analyzer.git``
 
 ### You can try the app by following the link:
+https://page-analyzer-production-48db.up.railway.app/
