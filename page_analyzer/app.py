@@ -22,7 +22,6 @@ app.config["DATABASE_URL"] = os.getenv("DATABASE_URL")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = os.getenv("SECRET_KEY")
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 
 @app.route("/")
