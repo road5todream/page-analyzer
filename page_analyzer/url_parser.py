@@ -9,4 +9,3 @@ def parser(url):
     )
     url_parsed = url_parsed.replace("www.", "")
     return url_parsed
-

@@ -28,9 +28,8 @@ app.config["DATABASE_URL"] = os.getenv("DATABASE_URL")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = os.getenv("SECRET_KEY")
-
-# Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+
 
 def is_valid(url):
     if len(url) > 255:
