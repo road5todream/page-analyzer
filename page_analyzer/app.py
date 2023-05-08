@@ -60,32 +60,12 @@ def add_url():
             422,
         )
     parsed_url = parser(url_from_form)
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                "SELECT id FROM urls WHERE urls.name = %s LIMIT 1",
-                (parsed_url,),
-            )
-            result = curs.fetchall()
-    if not result:
-        with psycopg2.connect(DATABASE_URL) as conn:
-            with conn.cursor() as curs:
-                curs.execute(
-                    "INSERT INTO urls (name) VALUES (%s)", (parsed_url,)
-                )
-                flash("Страница успешно добавлена!", "success")
-                session["name"] = parsed_url
-
-                curs.execute(
-                    "SELECT id FROM urls WHERE urls.name = %s LIMIT 1",
-                    (parsed_url,),
-                )
-                url_id = curs.fetchall()[0][0]
-    else:
-        flash("Страница уже существует", "info")
-        conn.close()
-        url_id = result[0][0]
-    return redirect(url_for("show_single_url", url_id=url_id))
+    url_id = db_works.b(parsed_url)
+    return redirect(
+        url_for(
+            "show_single_url",
+            url_id=url_id)
+    )
 
 
 @app.route("/urls/<int:url_id>")
