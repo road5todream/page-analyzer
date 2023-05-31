@@ -68,15 +68,15 @@ def add_url():
     existed_url = db.get_url_by_name(conn, normalized_url)
 
     if existed_url:
-        id = existed_url.id
+        url_id = existed_url.id
         flash('Страница уже существует', 'info')
     else:
-        id = db.create_url(conn, normalized_url)
+        url_id = db.create_url(conn, normalized_url)
         flash('Страница успешно добавлена', 'success')
 
     conn.close()
 
-    return redirect(url_for('url_show', id=id))
+    return redirect(url_for('show_single_url', url_id=url_id))
 
 
 @app.route("/urls/<int:url_id>")
