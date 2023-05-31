@@ -110,7 +110,7 @@ def get_content_of_page(page):
 @app.post("/urls/<int:url_id>/checks")
 def check_url(url_id):
     conn = get_conn()
-    url = db.get_url_by_id(conn, url_id)
+    url = db.get_url_id(conn, url_id)
     try:
         response = requests.get(url.name)
         response.raise_for_status()
