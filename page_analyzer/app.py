@@ -2,6 +2,7 @@ import os
 from page_analyzer.validator import validator, normalize
 from dotenv import load_dotenv
 import psycopg2
+from .url_parser import parser
 from bs4 import BeautifulSoup
 from itertools import zip_longest
 import requests
@@ -64,7 +65,7 @@ def add_url():
             422,
         )
     conn = get_conn()
-    normalized_url = normalize(url_from_form)
+    normalized_url = parser(url_from_form)
     existed_url = db.get_url_by_name(conn, normalized_url)
 
     if existed_url:
