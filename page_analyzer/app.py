@@ -25,9 +25,6 @@ app.config["SECRET_KEY"] = 'sdsdfsf'
 app.config["DATABASE_URL"] = os.getenv("DATABASE_URL")
 
 
-def normalize(url):
-    out = urlparse(url)
-    return f'{out.scheme}://{out.netloc}'
 
 
 def parse_page(page):
@@ -70,7 +67,7 @@ def add_url():
             422,
         )
     conn = get_conn()
-    url_id = db.get_url_by_name(conn, normalize(url_from_form))
+    url_id = db.get_url_by_name(conn, url_from_form)
     if url_id:
         id = url_id.id
         flash("Страница уже существует", "info")
