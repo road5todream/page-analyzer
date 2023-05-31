@@ -1,5 +1,5 @@
 import os
-from page_analyzer.validator import validator, normalize
+from page_analyzer.validator import validator
 from dotenv import load_dotenv
 import psycopg2
 from .url_parser import parser
