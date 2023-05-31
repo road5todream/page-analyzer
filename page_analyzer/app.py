@@ -1,5 +1,4 @@
 import os
-from urllib.parse import urlparse
 from page_analyzer.validator import validator
 from dotenv import load_dotenv
 import psycopg2
@@ -23,8 +22,6 @@ app = Flask(__name__)
 load_dotenv()
 app.config["SECRET_KEY"] = 'sdsdfsf'
 app.config["DATABASE_URL"] = os.getenv("DATABASE_URL")
-
-
 
 
 def parse_page(page):
