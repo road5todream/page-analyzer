@@ -1,6 +1,7 @@
 import validators
 from urllib.parse import urlparse
 
+
 def validator(url):
     if len(url) > 255:
         return {"result": False, "message": "URL превышает 255 символов"}
