@@ -21,7 +21,7 @@ from flask import (
 app = Flask(__name__)
 
 load_dotenv()
-app.config["SECRET_KEY"] = 'sdsdfsf'
+app.config["SECRET_KEY"] = os.getenv('SECRET_KEY')
 app.config["DATABASE_URL"] = os.getenv("DATABASE_URL")
 
 
