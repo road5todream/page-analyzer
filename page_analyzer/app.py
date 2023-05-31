@@ -2,7 +2,7 @@ import os
 from page_analyzer.validator import validator
 from dotenv import load_dotenv
 import psycopg2
-from .url_parser import parser
+from .url_parser import parse
 from bs4 import BeautifulSoup
 from itertools import zip_longest
 import requests
@@ -23,22 +23,6 @@ app = Flask(__name__)
 load_dotenv()
 app.config["SECRET_KEY"] = 'sdsdfsf'
 app.config["DATABASE_URL"] = os.getenv("DATABASE_URL")
-
-
-def parse_page(page):
-    soup = BeautifulSoup(page, 'html.parser')
-    title = soup.find('title').text if soup.find('title') else ''
-    h1 = soup.find('h1').text if soup.find('h1') else ''
-    description = soup.find('meta', attrs={'name': 'description'})
-    if description:
-        description = description['content']
-    else:
-        description = ''
-    return {
-        'title': title[:255],
-        'h1': h1[:255],
-        'description': description[:255],
-    }
 
 
 def get_conn():
@@ -65,14 +49,14 @@ def add_url():
             422,
         )
     conn = get_conn()
-    normalized_url = parser(url_from_form)
-    existed_url = db.get_url_by_name(conn, normalized_url)
+    parsed_url = parse(url_from_form)
+    url_id = db.get_url_name(conn, parsed_url)
 
-    if existed_url:
-        url_id = existed_url.id
+    if url_id:
+        url_id = url_id.id
         flash('Страница уже существует', 'info')
     else:
-        url_id = db.create_url(conn, normalized_url)
+        url_id = db.create_url(conn, url_id)
         flash('Страница успешно добавлена', 'success')
 
     conn.close()
@@ -84,8 +68,8 @@ def add_url():
 def show_single_url(url_id):
     conn = get_conn()
     messages = get_flashed_messages(with_categories=True)
-    url = db.get_url_by_id(conn, url_id)
-    checks = db.get_checks_by_url_id(conn, url_id)
+    url = db.get_url_id(conn, url_id)
+    checks = db.get_checks_url_id(conn, url_id)
     conn.close()
     return render_template(
         "/url.html",
@@ -107,6 +91,22 @@ def show_urls():
         messages=messages)
 
 
+def get_content_of_page(page):
+    soup = BeautifulSoup(page, 'html.parser')
+    h1 = soup.find('h1').text if soup.find('h1') else ''
+    title = soup.find('title').text if soup.find('title') else ''
+    description = soup.find('meta', attrs={'name': 'description'})
+    if description:
+        description = description['content']
+    else:
+        description = ''
+    return {
+        'title': title[:255],
+        'h1': h1[:255],
+        'description': description[:255],
+    }
+
+
 @app.post("/urls/<int:url_id>/checks")
 def check_url(url_id):
     conn = get_conn()
@@ -126,7 +126,7 @@ def check_url(url_id):
     page = response.text
     data = {'id': url_id,
             'status_code': response.status_code,
-            **parse_page(page)}
+            **get_content_of_page(page)}
     db.create_url_check(conn, data)
     flash('Страница успешно проверена', 'success')
     conn.close()

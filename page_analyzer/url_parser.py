@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 
 
-def parser(url):
+def parse(url):
     url_parsed = (
         urlparse(url)
         ._replace(fragment="", params="", query="", path="")
