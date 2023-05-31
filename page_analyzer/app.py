@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse
 from page_analyzer.validator import validator
 from dotenv import load_dotenv
 import psycopg2
@@ -26,7 +27,7 @@ app.config["DATABASE_URL"] = os.getenv("DATABASE_URL")
 
 def normalize(url):
     out = urlparse(url)
-    return f'{out.scheme}://{out.netloc}
+    return f'{out.scheme}://{out.netloc}'
 
 
 def parse_page(page):
