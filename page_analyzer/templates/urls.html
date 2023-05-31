@@ -14,13 +14,18 @@
                     <th>Последняя проверка</th>
                     <th>Код ответа</th>
                 </tr>
-                {% if urls %}
-                {% for id, name, created_at, status_code in urls %}
+                {% if data %}
+                {% for urls, check in data %}
                 <tr>
-                    <td>{{ id }}</td>
-                    <td><a href="/urls/{{ id }}">{{ name }}</a></td>
-                    <td>{% if created_at %}{{ created_at }}{% endif %}</td>
-                    <td>{% if status_code %}{{ status_code }}{% endif %}</td>
+                    <td>{{ urls.id }}</td>
+                    <td><a href="/urls/{{ urls.id }}">{{ urls.name }}</a></td>
+                    {% if check %}
+                        <td>{{ check.created_at }}</td>
+                        <td>{{ check.status_code }}</td>
+                    {% else %}
+                        <td></td>
+                        <td></td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
                 {% endif %}

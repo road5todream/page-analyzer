@@ -1,127 +1,78 @@
-import os
-import psycopg2
-import requests
-import bs4
-from dotenv import load_dotenv
-from flask import redirect, url_for, flash, session
+from psycopg2.extras import NamedTupleCursor
+from datetime import datetime
 
 
-load_dotenv()
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-SECRET_KEY = os.getenv("SECRET_KEY")
-
-
-def get_conn():
-    return psycopg2.connect(DATABASE_URL)
-
-
-conn = get_conn()
-
-
-def get_url_id(parsed_url):
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                "SELECT id FROM urls WHERE urls.name = %s LIMIT 1",
-                (parsed_url,),
-            )
-            result = curs.fetchall()
-    if not result:
-        with psycopg2.connect(DATABASE_URL) as conn:
-            with conn.cursor() as curs:
-                curs.execute(
-                    "INSERT INTO urls (name) VALUES (%s)", (parsed_url,)
-                )
-                flash("Страница успешно добавлена!", "success")
-                session["name"] = parsed_url
-
-                curs.execute(
-                    "SELECT id FROM urls WHERE urls.name = %s LIMIT 1",
-                    (parsed_url,),
-                )
-                url_id = curs.fetchall()[0][0]
-    else:
-        flash("Страница уже существует", "info")
-        conn.close()
-        url_id = result[0][0]
-    return url_id
-
-
-def get_url_cheks(url_id):
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                """SELECT *
-                FROM urls
-                WHERE urls.id = %s
-                LIMIT 1""",
-                (url_id,),
-            )
-            result = curs.fetchall()
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                """
-                        SELECT
-                        id, status_code, h1, title,
-                        description, created_at
-                        FROM url_checks
-                        WHERE url_checks.url_id = %s
-                        ORDER BY id DESC
-                        """,
-                (url_id,),
-            )
-            checks = curs.fetchall()
-    return checks, result
-
-
-def get_urls_list():
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                "SELECT urls.id, urls.name, url_checks.created_at, "
-                "url_checks.status_code FROM urls "
-                "LEFT JOIN url_checks ON urls.id = url_checks.url_id "
-                "WHERE url_checks.url_id IS NULL OR "
-                "url_checks.id = (SELECT MAX(url_checks.id) FROM url_checks "
-                "WHERE url_checks.url_id = urls.id) ORDER BY urls.id DESC "
-            )
-            urls = curs.fetchall()
+def get_urls(conn):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
+        curs.execute(
+            "SELECT * FROM urls ORDER BY id DESC;",
+        )
+        urls = curs.fetchall()
     return urls
 
 
-def get_url_check(url_id):
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                "SELECT name FROM urls WHERE id = %s LIMIT 1", (url_id,)
-            )
-            url_to_check = curs.fetchall()[0][0]
-            session["name"] = url_to_check
-    try:
-        response = requests.get(url_to_check)
-        response.raise_for_status()
-    except requests.exceptions.RequestException:
-        flash("Произошла ошибка при проверке", "danger")
-        conn.close()
-        return redirect(url_for("show_single_url", url_id=url_id))
+def get_url_checks(conn):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
+        curs.execute(
+            """SELECT DISTINCT ON (url_id) * FROM
+            url_checks ORDER BY url_id DESC, id DESC;"""
+        )
+        checks = curs.fetchall()
+    return checks
 
-    status_code = response.status_code
-    parsed_page = bs4.BeautifulSoup(response.text, "html.parser")
-    title = parsed_page.title.text if parsed_page.find("title") else ""
-    h1 = parsed_page.h1.text if parsed_page.find("h1") else ""
-    description = parsed_page.find("meta", attrs={"name": "description"})
-    description = description.get("content") if description else ""
 
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                """
-                        INSERT INTO public.url_checks
-                            (url_id, status_code, title, h1, description)
-                        VALUES (%s, %s, %s, %s, %s)
-                        """,
-                (url_id, status_code, title, h1, description),
-            )
-            flash("Страница успешно проверена", "success")
+def get_url_by_name(conn, url):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
+        curs.execute(
+            'SELECT id, name FROM urls WHERE name=%s',
+            (url,),
+        )
+        existed_url = curs.fetchone()
+    return existed_url
+
+
+def create_url(conn, url):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
+        curs.execute(
+            """INSERT INTO urls (name, created_at)
+            VALUES (%s, %s)
+            RETURNING id;""",
+            (url, datetime.today())
+        )
+        id = curs.fetchone().id
+
+    conn.commit()
+    return id
+
+
+def get_url_by_id(conn, id):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
+        curs.execute(
+            'SELECT * FROM urls WHERE id = %s',
+            (id,),
+        )
+        url = curs.fetchone()
+        return url
+
+
+def get_checks_by_url_id(conn, url_id):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as checks:
+        checks.execute(
+            "SELECT * FROM url_checks WHERE url_id = %s ORDER BY id DESC;",
+            (url_id,)
+        )
+        checks = checks.fetchall()
+    return checks
+
+
+def create_url_check(conn, check_data):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as check_curs:
+        check_curs.execute(
+            """INSERT INTO url_checks (url_id, status_code,
+            h1, title, description, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s);""",
+            (check_data['id'], check_data['status_code'],
+             check_data['h1'], check_data['title'],
+             check_data['description'], datetime.today()),
+        )
+    conn.commit()

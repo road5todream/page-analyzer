@@ -12,3 +12,6 @@ start:
 
 lint:
 	poetry run flake8 page_analyzer
+
+connect:
+	psql -d page-analyzer

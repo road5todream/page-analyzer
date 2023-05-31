@@ -11,7 +11,7 @@
 
 <main class="flex-grow-1">
     <div class="container-lg mt-3">
-        <h1>Сайт: {{ url[1] }}</h1>
+        <h1>Сайт: {{ url.name }}</h1>
 
 
         <div class="table-responsive">
@@ -20,15 +20,15 @@
                 <tbody>
                 <tr>
                     <td>ID</td>
-                    <td>{{ url[0] }}</td>
+                    <td>{{ url.id }}</td>
                 </tr>
                 <tr>
                     <td>Имя</td>
-                    <td>{{ url[1] }}</td>
+                    <td>{{ url.name }}</td>
                 </tr>
                 <tr>
                     <td>Дата создания</td>
-                    <td>{{ url[2] }}</td>
+                    <td>{{ url.created_at }}</td>
                 </tr>
                 </tbody>
             </table>
@@ -51,12 +51,12 @@
                 </tr>
                 {% for check in checks %}
                 <tr>
-                    <td>{{ check[0] }}</td>
-                    <td>{{ check[1] }}</td>
-                    <td>{{ check[2] }}</td>
-                    <td>{{ check[3] }}</td>
-                    <td>{{ check[4] }}</td>
-                    <td>{{ check[5] }}</td>
+                    <td>{{ check.id }}</td>
+                    <td>{{ check.status_code }}</td>
+                    <td>{{ check.h1 }}</td>
+                    <td>{{ check.title }}</td>
+                    <td>{{ check.description }}</td>
+                    <td>{{ check.created_at }}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
