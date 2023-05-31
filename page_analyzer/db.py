@@ -37,7 +37,7 @@ def create_url(conn, url):
             """INSERT INTO urls (name, created_at)
             VALUES (%s, %s)
             RETURNING id;""",
-            (url, datetime.today())
+            (url, datetime.now())
         )
         id = curs.fetchone().id
 
@@ -73,6 +73,6 @@ def create_url_check(conn, check_data):
             VALUES (%s, %s, %s, %s, %s, %s);""",
             (check_data['id'], check_data['status_code'],
              check_data['h1'], check_data['title'],
-             check_data['description'], datetime.today()),
+             check_data['description'], datetime.now()),
         )
     conn.commit()
