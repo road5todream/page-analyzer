@@ -56,7 +56,7 @@ def add_url():
         url_id = url_id.id
         flash('Страница уже существует', 'info')
     else:
-        url_id = db.create_url(conn, url_id)
+        url_id = db.create_url(conn, parsed_url)
         flash('Страница успешно добавлена', 'success')
 
     conn.close()
